@@ -1,0 +1,57 @@
+# Enterprise AI Governance Policies for Credit Fraud Detection
+version: "1.0"
+effective_date: "2025-01-01"
+
+data_governance:
+  pii_fields:
+    - card_number
+    - ssn
+    - email
+    - phone
+    - ip_address
+  retention_days: 90
+  encryption_required: true
+
+model_governance:
+  require_explainability: true
+  min_confidence_for_auto_action: 0.95
+  human_review_threshold: 0.70
+  max_model_age_days: 180
+  audit_all_predictions: true
+
+access_control:
+  roles:
+    analyst:
+      - read_transactions
+      - query_rag
+      - view_risk_scores
+    investigator:
+      - read_transactions
+      - query_rag
+      - view_risk_scores
+      - run_deep_analysis
+      - view_audit_logs
+    admin:
+      - "*"
+
+rate_limits:
+  default_rpm: 60
+  analyst_rpm: 120
+  investigator_rpm: 300
+
+risk_thresholds:
+  auto_block: 0.95
+  high_risk: 0.80
+  medium_risk: 0.50
+  low_risk: 0.20
+  escalate_to_human: 0.70
+
+compliance:
+  frameworks:
+    - PCI-DSS
+    - BSA/AML
+    - GDPR
+    - SOX
+  require_audit_trail: true
+  alert_on_high_risk: true
+  regulatory_reporting_threshold: 10000.00
