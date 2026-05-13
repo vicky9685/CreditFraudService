@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: fraud-detection
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - ollama-deployment.yaml
+  - app-deployment.yaml
+  - ingress.yaml
+
+# Override image tag at deploy time:
+#   kubectl kustomize . | kubectl apply -f -
+# Or:
+#   kustomize edit set image credit-fraud-service=myregistry/credit-fraud-service:v1.2.3
+images:
+  - name: credit-fraud-service
+    newTag: latest
