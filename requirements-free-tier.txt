@@ -1,0 +1,41 @@
+# Minimal requirements for free-tier deployments (Render 512MB / Fly.io 256MB)
+# Uses Groq or HF Inference API instead of local model loading.
+# Install: pip install -r requirements-free-tier.txt
+
+# ── Core ──────────────────────────────────────────────────────────────────────
+fastapi>=0.115.0
+uvicorn>=0.32.0
+pydantic>=2.8.0
+pydantic-settings>=2.6.0
+python-dotenv>=1.0.0
+
+# ── LLM: cloud free-tier only (no heavy torch) ────────────────────────────────
+groq>=0.9.0                      # Groq free tier (preferred)
+huggingface-hub>=0.26.0          # HF Inference API fallback
+
+# ── Embeddings (lightweight) ──────────────────────────────────────────────────
+sentence-transformers>=3.3.0
+# torch installed separately to control version/extras
+
+# ── Vector DB ─────────────────────────────────────────────────────────────────
+chromadb>=0.5.0
+
+# ── RAG ───────────────────────────────────────────────────────────────────────
+langchain>=0.3.0
+langchain-community>=0.3.0
+langchain-core>=0.3.0
+
+# ── Data & ML ─────────────────────────────────────────────────────────────────
+pandas>=2.2.0
+numpy>=1.26.0
+scikit-learn>=1.5.0
+faker>=30.0.0
+
+# ── Governance ────────────────────────────────────────────────────────────────
+structlog>=24.4.0
+prometheus-client>=0.21.0
+
+# ── Async & HTTP ──────────────────────────────────────────────────────────────
+httpx>=0.28.0
+anyio>=4.7.0
+aiofiles>=24.1.0

@@ -10,8 +10,18 @@ langchain>=0.3.0
 langchain-community>=0.3.0
 langchain-core>=0.3.0
 sentence-transformers>=3.3.0
-# Ollama Python client for Qwen3
+# Ollama Python client for Qwen3 (optional — local only)
 ollama>=0.4.0
+
+# ── Free-tier cloud LLM backends (all optional) ───────────────────────────────
+# Groq: free 14,400 tokens/day — console.groq.com
+groq>=0.9.0
+# HuggingFace Hub client for Inference API (free tier)
+huggingface-hub>=0.26.0
+# Local HuggingFace pipeline (CPU Qwen2.5-0.5B fallback)
+transformers>=4.47.0
+torch>=2.3.0; platform_machine != "arm64"   # skip on Apple Silicon (use MPS build)
+accelerate>=0.34.0
 
 # ── Vector Database ───────────────────────────────────────────────────────────
 chromadb>=0.5.0

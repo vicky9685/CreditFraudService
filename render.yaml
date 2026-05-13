@@ -1,0 +1,44 @@
+# render.yaml — Render.com deployment
+# Free tier: 512 MB RAM, 0.1 CPU, spins down after 15 min inactivity
+# Requires: GROQ_API_KEY or HF_API_TOKEN secret (set in Render dashboard)
+#
+# Deploy: connect GitHub repo at dashboard.render.com → New Web Service
+
+services:
+  - type: web
+    name: credit-fraud-service
+    runtime: python
+    region: oregon
+
+    # Use minimal deps to stay within 512 MB RAM
+    buildCommand: pip install -r requirements-free-tier.txt && pip install torch --index-url https://download.pytorch.org/whl/cpu
+    startCommand: python main.py
+
+    # Render injects PORT automatically
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: WARNING
+      - key: CHROMA_PERSIST_DIR
+        value: /opt/render/project/src/chroma_db
+      - key: AUDIT_LOG_FILE
+        value: /opt/render/project/src/logs/audit.jsonl
+      - key: PII_MASKING_ENABLED
+        value: "true"
+      - key: REQUIRE_EXPLAINABILITY
+        value: "true"
+      # Add your free API key in Render Dashboard → Environment
+      - key: GROQ_API_KEY
+        sync: false          # set manually in dashboard
+      - key: HF_API_TOKEN
+        sync: false          # set manually in dashboard
+
+    healthCheckPath: /health
+
+    # Free tier — no persistent disk. ChromaDB re-indexes on each cold start.
+    # Upgrade to paid to add a disk and enable persistence:
+    # disk:
+    #   name: chroma-data
+    #   mountPath: /opt/render/project/src/chroma_db
+    #   sizeGB: 1

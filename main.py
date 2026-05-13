@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -35,10 +36,13 @@ def run_api_server() -> None:
 
     cfg = get_settings()
     app = create_app()
+    # PORT env var used by HF Spaces, Render, Fly.io, Railway
+    port = int(os.environ.get("PORT", cfg.api_port))
+    host = os.environ.get("HOST", cfg.api_host)
     uvicorn.run(
         app,
-        host=cfg.api_host,
-        port=cfg.api_port,
+        host=host,
+        port=port,
         log_level=cfg.log_level.lower(),
         reload=not cfg.is_production,
     )

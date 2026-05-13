@@ -1,0 +1,64 @@
+# fly.toml — Fly.io deployment
+# Free tier: 3 shared VMs (256 MB RAM each), 3 GB storage
+# Requires: GROQ_API_KEY secret (flyctl secrets set GROQ_API_KEY=gsk_...)
+#
+# Deploy:
+#   brew install flyctl
+#   flyctl auth login
+#   flyctl launch --no-deploy   (first time — creates app)
+#   flyctl secrets set GROQ_API_KEY=gsk_...
+#   flyctl deploy
+
+app = "credit-fraud-service"    # change to your unique app name
+primary_region = "iad"          # Washington DC (change as needed)
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[build]
+  dockerfile = "Dockerfile"
+  # Override CMD to use free-tier minimal setup
+  [build.args]
+    REQUIREMENTS_FILE = "requirements-free-tier.txt"
+
+[env]
+  APP_ENV = "production"
+  LOG_LEVEL = "WARNING"
+  PORT = "8080"
+  CHROMA_PERSIST_DIR = "/data/chroma_db"
+  AUDIT_LOG_FILE = "/data/logs/audit.jsonl"
+
+# Persistent volume for ChromaDB and audit logs
+[mounts]
+  source = "fraud_data"
+  destination = "/data"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8080
+  auto_stop_machines = true     # free tier — stop when idle
+  auto_start_machines = true    # wake on request
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+  [[services.http_checks]]
+    interval = "30s"
+    timeout = "10s"
+    grace_period = "90s"
+    method = "GET"
+    path = "/health"
+
+[[vm]]
+  size = "shared-cpu-1x"        # free tier machine
+  memory = "512mb"              # 256 MB free, 512 MB uses tiny credit

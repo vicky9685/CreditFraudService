@@ -1,0 +1,55 @@
+# Dockerfile for Hugging Face Spaces
+# HF Spaces requires port 7860 and runs as uid 1000
+#
+# Free tier specs: 2 vCPU, 16 GB RAM, no GPU
+# LLM: uses GROQ_API_KEY or HF_API_TOKEN (set in Space Secrets)
+#       falls back to local Qwen2.5-0.5B on CPU
+
+FROM python:3.11-slim
+
+# HF Spaces runs as non-root uid 1000
+RUN useradd -m -u 1000 user
+WORKDIR /home/user/app
+
+# System deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential gcc g++ curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python deps (use free-tier minimal set first, then extras)
+COPY requirements-free-tier.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements-free-tier.txt
+
+# Install torch CPU-only (saves ~2 GB vs CUDA build)
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+
+# Install transformers for local HF pipeline fallback
+RUN pip install --no-cache-dir transformers accelerate
+
+# Pre-cache the embedding model (22 MB) at build time
+RUN python -c "from sentence_transformers import SentenceTransformer; \
+               SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')" || true
+
+# Copy application source
+COPY --chown=user:user . .
+
+# Create required dirs
+RUN mkdir -p logs chroma_db && chown -R user:user logs chroma_db
+
+USER user
+
+# HF Spaces requires port 7860
+EXPOSE 7860
+
+ENV PORT=7860
+ENV API_HOST=0.0.0.0
+ENV API_PORT=7860
+ENV CHROMA_PERSIST_DIR=/home/user/app/chroma_db
+ENV AUDIT_LOG_FILE=/home/user/app/logs/audit.jsonl
+ENV APP_ENV=production
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
+    CMD curl -f http://localhost:7860/health || exit 1
+
+CMD ["python", "main.py"]
